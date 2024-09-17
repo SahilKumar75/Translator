@@ -1,4 +1,3 @@
-
 package com.example.translator.ui
 
 import TranslationRepository
@@ -13,9 +12,20 @@ class TranslationViewModel : ViewModel() {
 
     private val repository = TranslationRepository()
 
+    // LiveData for translation results
     private val _translationResult = MutableLiveData<TranslationResult>()
     val translationResult: LiveData<TranslationResult> get() = _translationResult
 
+    // LiveData for recognized text from speech
+    private val _recognizedText = MutableLiveData<String>()
+    val recognizedText: LiveData<String> get() = _recognizedText
+
+    // Update the recognized text
+    fun updateRecognizedText(text: String) {
+        _recognizedText.value = text
+    }
+
+    // Perform translation
     fun translate(text: String, targetLanguage: String) {
         viewModelScope.launch {
             val result = repository.translateText(text, targetLanguage)
@@ -23,4 +33,3 @@ class TranslationViewModel : ViewModel() {
         }
     }
 }
-

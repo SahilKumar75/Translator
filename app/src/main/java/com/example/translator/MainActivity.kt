@@ -4,21 +4,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.langconverter.model.TranslationResult
 import com.example.translator.ui.TranslationViewModel
 import com.example.translator.ui.theme.TranslatorTheme
@@ -28,9 +30,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             TranslatorTheme {
-                // A surface container using the background color from the theme
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF1D1E22)), // Screen background color
                     contentColor = Color.White
                 ) { innerPadding ->
                     TranslationScreen(modifier = Modifier.padding(innerPadding))
@@ -49,53 +52,90 @@ fun TranslationScreen(modifier: Modifier = Modifier, viewModel: TranslationViewM
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            .background(Brush.verticalGradient(colors = listOf(Color(0xFFB2FEFA), Color(0xFF0ED2F7))))
+            .background(Color(0xFF1D1E22)) // Column background
     ) {
+        // Centered screen heading
         Text(
             text = "Translate Text",
             fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = 16.dp)
         )
 
+        // Label above the first input card
+        Text(
+            text = "Transcript",
+            fontSize = 18.sp,
+            color = Color.White,
+            modifier = Modifier.align(Alignment.Start) // Align label to the left
+        )
+
+        // Translation input field (First card)
         BasicTextField(
             value = textToTranslate,
             onValueChange = { textToTranslate = it },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
             textStyle = TextStyle(fontSize = 18.sp, color = Color.White),
             modifier = Modifier
-                .background(Color(0xFF2C2C2C))
                 .fillMaxWidth()
+                .height(150.dp)
+                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp)) // Set card color to #252D34
                 .padding(16.dp)
-                .border(1.dp, Color.Gray)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // "Translate" button
         Button(
             onClick = {
-                val targetLanguage = "en" // Example target language
+                val targetLanguage = "hi" // Example target language
                 viewModel.translate(textToTranslate, targetLanguage)
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Brush.horizontalGradient(colors = listOf(Color(0xFFB2FEFA), Color(0xFF0ED2F7)))),
-            contentPadding = PaddingValues(vertical = 12.dp)
+                .align(Alignment.CenterHorizontally)
+                .width(150.dp),
+            contentPadding = PaddingValues(vertical = 12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF69D269)) // Button color
         ) {
-            Text(text = "Translate", fontSize = 18.sp, color = Color.White)
+            Text(
+                text = "Translate",
+                fontSize = 18.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold // Bold text
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Label above the second box (output card)
+        Text(
+            text = "Translated",
+            fontSize = 18.sp,
+            color = Color.White,
+            modifier = Modifier.align(Alignment.Start) // Align label to the left
+        )
+
+        // Translation result output (Second card)
         Text(
             text = translationResult.translatedText ?: "Translation failed",
             fontSize = 18.sp,
-            color = Color.White,
+            color = Color.White, // Text inside the card is white
             modifier = Modifier
-                .background(Color(0xFF2C2C2C))
                 .fillMaxWidth()
+                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp)) // Set card color to 252D34
                 .padding(16.dp)
-                .border(1.dp, Color.Gray)
+                .height(150.dp)
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TranslationScreenPreview() {
+    TranslatorTheme {
+        TranslationScreen()
     }
 }

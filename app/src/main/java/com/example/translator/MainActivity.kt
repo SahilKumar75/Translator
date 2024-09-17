@@ -51,13 +51,16 @@ fun TranslationScreen(modifier: Modifier = Modifier, viewModel: TranslationViewM
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .background(Color(0xFF1D1E22)) // Column background
+            .background(Color(0xFF1D1E22)) // Background color to cover full screen
+            .padding(horizontal = 16.dp, vertical = 32.dp) // Padding to ensure the layout fits well
     ) {
-        // Centered screen heading
+        // Spacing from the top to the title
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Centered screen heading with bold text
         Text(
             text = "Translate Text",
-            fontSize = 24.sp,
+            fontSize = 34.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             modifier = Modifier
@@ -65,12 +68,16 @@ fun TranslationScreen(modifier: Modifier = Modifier, viewModel: TranslationViewM
                 .padding(bottom = 16.dp)
         )
 
-        // Label above the first input card
+        Spacer(modifier = Modifier.height(26.dp))
+
+        // Label for the first input card aligned with the card
         Text(
             text = "Transcript",
-            fontSize = 18.sp,
+            fontSize = 28.sp,
             color = Color.White,
-            modifier = Modifier.align(Alignment.Start) // Align label to the left
+            modifier = Modifier
+                .align(Alignment.Start) // Align with the card
+                .padding(start = 8.dp, bottom = 8.dp)
         )
 
         // Translation input field (First card)
@@ -80,13 +87,14 @@ fun TranslationScreen(modifier: Modifier = Modifier, viewModel: TranslationViewM
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
             textStyle = TextStyle(fontSize = 18.sp, color = Color.White),
             modifier = Modifier
-                .fillMaxWidth()
+                .align(Alignment.CenterHorizontally)
+                .width(350.dp)
                 .height(150.dp)
                 .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp)) // Set card color to #252D34
                 .padding(16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(26.dp))
 
         // "Translate" button
         Button(
@@ -108,24 +116,28 @@ fun TranslationScreen(modifier: Modifier = Modifier, viewModel: TranslationViewM
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(26.dp))
 
-        // Label above the second box (output card)
+        // Label for the second box (output card) aligned with the card
         Text(
             text = "Translated",
-            fontSize = 18.sp,
+            fontSize = 28.sp,
             color = Color.White,
-            modifier = Modifier.align(Alignment.Start) // Align label to the left
+            modifier = Modifier
+                .align(Alignment.Start) // Align with the card
+                .padding(start = 8.dp, bottom = 8.dp)
         )
 
         // Translation result output (Second card)
         Text(
             text = translationResult.translatedText ?: "Translation failed",
             fontSize = 18.sp,
-            color = Color.White, // Text inside the card is white
+            color = Color(0xFF69D269), // Set text color to #69D269
+            fontWeight = FontWeight.Bold, // Bold text
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp)) // Set card color to 252D34
+                .align(Alignment.CenterHorizontally)
+                .width(350.dp)
+                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp)) // Set card color to #252D34
                 .padding(16.dp)
                 .height(150.dp)
         )

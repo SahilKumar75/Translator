@@ -34,21 +34,3 @@ class TranslationRepository : TranslationService {
         }
     }
 }
-
-
-
-
-//
-//val translator = Translation.getClient(
-//    Translation.getTranslatorOptionsBuilder()
-//        .setSourceLanguage(TranslateLanguage.ENGLISH) // Example source language
-//        .setTargetLanguage(targetLanguage)
-//        .build()
-//)
-//
-//return try {
-//    val translatedText = translator.translate(text).await()
-//    TranslationResult(translatedText ?: "Translation failed")
-//} catch (e: Exception) {
-//    TranslationResult("Error: ${e.localizedMessage}")
-//}

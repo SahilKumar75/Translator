@@ -1,12 +1,13 @@
 package com.example.translator
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+
+import android.speech.tts.TextToSpeech
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,25 +34,8 @@ import com.example.translator.utils.startVoiceRecognition
 import kotlinx.coroutines.delay
 
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            TranslatorTheme {
-                Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFF1D1E22)), // Screen background color
-                    contentColor = Color.White
-                ) { innerPadding ->
-                    TranslationScreen(modifier = Modifier.padding(innerPadding))
-                }
-            }
-        }
-    }
-}
-
-
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.clickable
 
 @Composable
 fun TranslationScreen(
@@ -62,144 +46,165 @@ fun TranslationScreen(
     val translationResult by viewModel.translationResult.observeAsState(TranslationResult(""))
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current // Get FocusManager to handle keyboard focus
 
     var vibrate by remember { mutableStateOf(false) }
     var isListening by remember { mutableStateOf(false) } // Track if currently listening
 
-    // LaunchedEffect to reset vibrate state after a delay
-    LaunchedEffect(vibrate) {
-        if (vibrate) {
-            delay(200) // Delay for 200 milliseconds
-            vibrate = false // Reset vibrate state after delay
+    // Text-to-Speech instance
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    // Initialize TTS
+    LaunchedEffect(Unit) {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.setLanguage(java.util.Locale.getDefault())
+            }
         }
     }
 
-    Column(
-        modifier = modifier
+    Box(
+        modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1D1E22))
+            .clickable { focusManager.clearFocus() } // Clear focus when clicking outside the input fields
             .padding(horizontal = 16.dp, vertical = 32.dp)
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
+        LazyColumn(
+            modifier = modifier.fillMaxSize()
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
 
-        Text(
-            text = "Translate Text",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 16.dp)
-        )
+                Text(
+                    text = "Translate Text",
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                )
 
-        Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-        // Text label for the recognized speech input
-        Text(
-            text = "Transcript",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .padding(start = 8.dp, bottom = 8.dp)
-        )
+                // Transcript label and input field.
+                Text(
+                    text = "Transcript",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
 
-        BasicTextField(
-            value = textToTranslate,
-            onValueChange = { text -> viewModel.updateRecognizedText(text) },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
-            textStyle = TextStyle(fontSize = 18.sp, color = Color.White),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(350.dp)
-                .height(150.dp)
-                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        )
+                BasicTextField(
+                    value = textToTranslate,
+                    onValueChange = { text -> viewModel.updateRecognizedText(text) },
+                    textStyle = TextStyle(fontSize = 18.sp, color = Color.White),
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(150.dp)
+                        .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                )
 
-        Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-        // Text label for the translation result
-        Text(
-            text = "Translation",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .padding(start = 8.dp, bottom = 8.dp)
-        )
+                // Translation label and result field.
+                Text(
+                    text = "Translation",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
 
-        BasicTextField(
-            value = translationResult.translatedText ?: "",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
-            textStyle = TextStyle(fontSize = 18.sp, color = Color(0xFF69D269), fontWeight = FontWeight.Bold),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(350.dp)
-                .height(150.dp)
-                .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        )
+                BasicTextField(
+                    value = translationResult.translatedText ?: "",
+                    onValueChange = {},
+                    textStyle = TextStyle(fontSize = 18.sp, color = Color(0xFF69D269), fontWeight = FontWeight.Bold),
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(150.dp)
+                        .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                )
 
-        Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-        IconButton(
-            onClick = {
-                if (!isListening) {
-                    startVoiceRecognition(context) { recognizedText ->
-                        viewModel.updateRecognizedText(recognizedText)
+                // Row for microphone and speaker icons side by side.
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            if (!isListening) {
+                                startVoiceRecognition(context) { recognizedText ->
+                                    viewModel.updateRecognizedText(recognizedText)
+
+                                    vibrate = true // Set vibrate to true when button is clicked.
+                                    isListening = true // Set listening state to true.
+                                }
+                            } else {
+                                isListening = false // Set listening state to false.
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painterResource(id = if (isListening) R.drawable.ic_pause else R.drawable.ic_mic),
+                            contentDescription = if (isListening) "Pause" else "Mic",
+                            tint = Color.White
+                        )
                     }
-                    vibrate = true // Set vibrate to true when button is clicked
-                    isListening = true // Set listening state to true
-                } else {
-                    // Stop listening logic here (you may need to implement this in your SpeechRecognizer setup)
-                    // For example, you might need to call a method to stop recognition.
-                    // This will depend on how you've set up your SpeechRecognizer.
-                    isListening = false // Set listening state to false
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .size(48.dp)
-                .graphicsLayer {
-                    scaleX = if (vibrate) 1.2f else 1f // Scale up when vibrating
-                    scaleY = if (vibrate) 1.2f else 1f
-                    alpha = if (vibrate) 0.7f else 1f // Fade out slightly when vibrating
-                }
-        ) {
-            Icon(
-                painterResource(id = if (isListening) R.drawable.ic_pause else R.drawable.ic_mic), // Change icon based on state
-                contentDescription = if (isListening) "Pause" else "Mic",
-                tint = Color.White
-            )
-        }
 
-        Spacer(modifier = Modifier.height(26.dp))
+                    IconButton(
+                        onClick = {
+                            translationResult.translatedText?.let { text ->
+                                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Image(
+                            painterResource(id = R.drawable.volume), // Replace with your speaker icon resource.
+                            contentDescription = "Speak Translation",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
 
-        Button(
-            onClick = {
-                val targetLanguage = "hi" // Example target language
-                viewModel.translate(textToTranslate, targetLanguage)
-            },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(150.dp),
-            contentPadding = PaddingValues(vertical = 12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF69D269))
-        ) {
-            Text(
-                text = "Translate",
-                fontSize = 18.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+                Spacer(modifier = Modifier.height(26.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(
+                        onClick = {
+                            val targetLanguage = "hi" // Example target language.
+                            viewModel.translate(textToTranslate, targetLanguage)
+                        },
+                        modifier = Modifier.width(150.dp),
+                        contentPadding = PaddingValues(vertical = 12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF69D269))
+                    ) {
+                        Text(
+                            text = "Translate",
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
-
 
 
 @Preview(showBackground = true)

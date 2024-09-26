@@ -1,6 +1,7 @@
 package com.example.translator.ui
 
 import TranslationRepository
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -20,6 +21,10 @@ class TranslationViewModel : ViewModel() {
     private val _recognizedText = MutableLiveData<String>()
     val recognizedText: LiveData<String> get() = _recognizedText
 
+    // LiveData for picked image URI
+    private val _pickedImageUri = MutableLiveData<Uri?>()
+    val pickedImageUri: LiveData<Uri?> get() = _pickedImageUri
+
     // Update the recognized text
     fun updateRecognizedText(text: String) {
         _recognizedText.value = text
@@ -31,5 +36,11 @@ class TranslationViewModel : ViewModel() {
             val result = repository.translateText(text, targetLanguage)
             _translationResult.value = result
         }
+    }
+
+    // Update picked image URI
+    fun onImagePicked(uri: Uri) {
+        _pickedImageUri.value = uri
+        // You can perform additional processing with the image URI if needed
     }
 }

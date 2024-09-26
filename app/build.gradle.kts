@@ -79,4 +79,11 @@ dependencies {
     // Lifecycle components
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.5") // Updated to the latest version
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.8.5") // Updated to the latest version
+
+    implementation ("com.google.android.exoplayer:exoplayer:2.16.0")
+
+    implementation ("com.google.android.gms:play-services-mlkit-text-recognition:18.0.0")
+    implementation ("com.github.droidninja:photo-picker:2.1.0")
+
+    implementation("io.coil-kt:coil-compose:2.2.2")
 }

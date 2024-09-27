@@ -1,7 +1,10 @@
 package com.example.translator
 
 
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,7 +39,26 @@ import kotlinx.coroutines.delay
 
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            TranslatorTheme {
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF1D1E22)), // Screen background color
+                    contentColor = Color.White
+                ) { innerPadding ->
+                    TranslationScreen(modifier = Modifier.padding(innerPadding))
+                }
+            }
+        }
+    }
+}
 @Composable
 fun TranslationScreen(
     modifier: Modifier = Modifier,
@@ -66,32 +88,37 @@ fun TranslationScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1D1E22))
-            .clickable { focusManager.clearFocus() } // Clear focus when clicking outside the input fields
+            .background(Color(0xFF5e0606))
+//            .clickable { focusManager.clearFocus() } // Clear focus when clicking outside the input fields
             .padding(horizontal = 16.dp, vertical = 32.dp)
     ) {
         LazyColumn(
-            modifier = modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Spacer(modifier = Modifier.height(10.dp))
+//                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Translate Text",
-                    fontSize = 34.sp,
+                    text = "Firestormers Mandarin Translator",
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 36.sp, // Set this for line spacing
                     modifier = Modifier
                         .padding(bottom = 16.dp)
                         .fillMaxWidth()
                         .wrapContentWidth(Alignment.CenterHorizontally)
                 )
 
+
                 Spacer(modifier = Modifier.height(26.dp))
 
                 // Transcript label and input field.
                 Text(
-                    text = "Transcript",
+                    text = "Chinese Language",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -105,11 +132,11 @@ fun TranslationScreen(
                     modifier = Modifier
                         .width(350.dp)
                         .height(150.dp)
-                        .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
+                        .background(Color(0xfff5c85f), shape = RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(36.dp))
 
                 // Translation label and result field.
                 Text(
@@ -127,7 +154,7 @@ fun TranslationScreen(
                     modifier = Modifier
                         .width(350.dp)
                         .height(150.dp)
-                        .background(Color(0xFF252D34), shape = RoundedCornerShape(16.dp))
+                        .background(Color(0xfff5c85f), shape = RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 )
 

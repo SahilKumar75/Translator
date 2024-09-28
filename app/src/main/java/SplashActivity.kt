@@ -3,6 +3,8 @@ package com.example.translator
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
@@ -23,19 +25,23 @@ class SplashActivity : AppCompatActivity() {
         val videoUri = Uri.parse("android.resource://" + packageName + "/" + R.raw.splash_video)
         videoView.setVideoURI(videoUri)
 
-        // Start the video
+        // Start the video as soon as it is ready
         videoView.setOnPreparedListener { mediaPlayer ->
             mediaPlayer.isLooping = false  // Set to true if you want the video to loop
-            videoView.start()
-        }
+            videoView.start() // Start the video playback immediately
 
-        // Listen for when the video finishes playing
-        videoView.setOnCompletionListener {
-            // Navigate to MainActivity after the video finishes
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()  // Close the splash screen activity
+            // Track video duration and move to MainActivity after it ends
+            val videoDuration = mediaPlayer.duration
+            Handler(Looper.getMainLooper()).postDelayed({
+                startMainActivity()
+            }, 2000) // Move to MainActivity after the video duration
         }
+    }
+
+    private fun startMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()  // Close the splash screen activity
     }
 
     // Hide the system UI to make the activity truly full-screen

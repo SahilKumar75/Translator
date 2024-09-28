@@ -124,16 +124,16 @@ fun TranslationScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Dropdown for language selection
+                // Dropdown for language selection with white background and black text
                 Box {
                     Button(
                         onClick = { expanded = true },
                         modifier = Modifier
                             .width(200.dp)
                             .padding(bottom = 16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = customRed)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White) // Set button background to white
                     ) {
-                        Text("Translate to: ${languages.find { languageCodes[it] == selectedLanguage }}", color = Color.White)
+                        Text("Translate to: ${languages.find { languageCodes[it] == selectedLanguage }}", color = Color.Black) // Text color to black
                     }
 
                     DropdownMenu(
@@ -142,7 +142,7 @@ fun TranslationScreen(
                     ) {
                         languages.forEach { language ->
                             DropdownMenuItem(
-                                text = { Text(language) },
+                                text = { Text(language, color = Color.Black) }, // Text color to black
                                 onClick = {
                                     selectedLanguage = languageCodes[language] ?: "hi"
                                     expanded = false
@@ -231,7 +231,7 @@ fun TranslationScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Centered button in the middle of the screen
+                // Centered button in the middle of the screen with white background and black text
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -244,13 +244,13 @@ fun TranslationScreen(
                         },
                         modifier = Modifier
                             .width(150.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = customRed)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White) // Set button background to white
                     ) {
                         Text(
                             text = "Translate",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.Black // Set text color to black
                         )
                     }
                 }

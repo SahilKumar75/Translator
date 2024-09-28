@@ -60,6 +60,10 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.vision.common)
+    implementation(libs.play.services.mlkit.text.recognition.common)
+    implementation(libs.play.services.mlkit.text.recognition)
+    implementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,4 +83,9 @@ dependencies {
     // Lifecycle components
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.5") // Updated to the latest version
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.8.5") // Updated to the latest version
+
+    implementation ("com.google.mlkit:text-recognition:16.0.1")
+    implementation ("com.google.android.gms:play-services-vision:20.1.3")
+
+
 }

@@ -1,3 +1,5 @@
+package com.example.translator.data
+
 import com.example.langconverter.data.TranslationService
 import com.example.langconverter.model.TranslationResult
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -7,19 +9,28 @@ import kotlinx.coroutines.tasks.await
 
 class TranslationRepository : TranslationService {
 
-    override suspend fun translateText(text: String, targetLanguage: String): TranslationResult {
+    // Add sourceLanguageCode and targetLanguageCode as function parameters
+    override suspend fun translateText(text: String, sourceLanguageCode: String, targetLanguageCode: String): TranslationResult {
 
+        // Convert sourceLanguage and targetLanguage to ML Kit TranslateLanguage format
+        val sourceLanguage = TranslateLanguage.fromLanguageTag(sourceLanguageCode)
+        val targetLanguage = TranslateLanguage.fromLanguageTag(targetLanguageCode)
+
+        // Ensure that both sourceLanguage and targetLanguage are valid
+        if (sourceLanguage == null || targetLanguage == null) {
+            return TranslationResult("Invalid language code.")
+        }
+
+        // Dynamically set the source and target languages
         val options = TranslatorOptions.Builder()
-            .setSourceLanguage(TranslateLanguage.CHINESE) // You can modify this as needed
-            .setTargetLanguage(targetLanguage)
+            .setSourceLanguage(sourceLanguage)  // Source language dynamically set
+            .setTargetLanguage(targetLanguage)  // Target language dynamically set
             .build()
 
         // Initialize the ML Kit translator
         val translator = Translation.getClient(options)
+
         return try {
-            // Configure the translator options with source and target languages
-
-
             // Download language models if necessary
             translator.downloadModelIfNeeded().await()
 

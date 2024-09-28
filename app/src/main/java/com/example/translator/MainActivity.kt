@@ -1,41 +1,54 @@
 package com.example.translator
 
-
+import android.graphics.Bitmap
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.langconverter.model.TranslationResult
 import com.example.translator.ui.TranslationViewModel
 import com.example.translator.ui.theme.TranslatorTheme
-import androidx.compose.ui.res.painterResource
 import com.example.translator.utils.startVoiceRecognition
-import kotlinx.coroutines.delay
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
-
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.clickable
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            TranslatorTheme {
+                CheckCameraPermission {
+                    TranslationScreen()
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun TranslationScreen(
@@ -46,15 +59,11 @@ fun TranslationScreen(
     val translationResult by viewModel.translationResult.observeAsState(TranslationResult(""))
 
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current // Get FocusManager to handle keyboard focus
+    val focusManager = LocalFocusManager.current
 
-    var vibrate by remember { mutableStateOf(false) }
-    var isListening by remember { mutableStateOf(false) } // Track if currently listening
-
-    // Text-to-Speech instance
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    var isListening by remember { mutableStateOf(false) }
 
-    // Initialize TTS
     LaunchedEffect(Unit) {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -63,19 +72,29 @@ fun TranslationScreen(
         }
     }
 
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview(),
+        onResult = { bitmap: Bitmap? ->
+            bitmap?.let {
+                extractTextFromImage(it, viewModel)
+            }
+        }
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1D1E22))
-            .clickable { focusManager.clearFocus() } // Clear focus when clicking outside the input fields
+            .clickable { focusManager.clearFocus() }
             .padding(horizontal = 16.dp, vertical = 32.dp)
     ) {
         LazyColumn(
             modifier = modifier.fillMaxSize()
+                .background(Color(0xFF1D1E22)),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Spacer(modifier = Modifier.height(10.dp))
-
                 Text(
                     text = "Translate Text",
                     fontSize = 34.sp,
@@ -87,9 +106,7 @@ fun TranslationScreen(
                         .wrapContentWidth(Alignment.CenterHorizontally)
                 )
 
-                Spacer(modifier = Modifier.height(26.dp))
-
-                // Transcript label and input field.
+                // Transcript heading and box
                 Text(
                     text = "Transcript",
                     fontSize = 20.sp,
@@ -97,10 +114,9 @@ fun TranslationScreen(
                     color = Color.White,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )
-
                 BasicTextField(
                     value = textToTranslate,
-                    onValueChange = { text -> viewModel.updateRecognizedText(text) },
+                    onValueChange = { viewModel.updateRecognizedText(it) },
                     textStyle = TextStyle(fontSize = 18.sp, color = Color.White),
                     modifier = Modifier
                         .width(350.dp)
@@ -109,17 +125,16 @@ fun TranslationScreen(
                         .padding(16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(24.dp)) // Add space between boxes
 
-                // Translation label and result field.
+                // Translation heading and box
                 Text(
-                    text = "Translation",
+                    text = "Translated Text",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )
-
                 BasicTextField(
                     value = translationResult.translatedText ?: "",
                     onValueChange = {},
@@ -133,7 +148,6 @@ fun TranslationScreen(
 
                 Spacer(modifier = Modifier.height(26.dp))
 
-                // Row for microphone and speaker icons side by side.
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
@@ -145,12 +159,10 @@ fun TranslationScreen(
                             if (!isListening) {
                                 startVoiceRecognition(context) { recognizedText ->
                                     viewModel.updateRecognizedText(recognizedText)
-
-                                    vibrate = true // Set vibrate to true when button is clicked.
-                                    isListening = true // Set listening state to true.
+                                    isListening = true
                                 }
                             } else {
-                                isListening = false // Set listening state to false.
+                                isListening = false
                             }
                         },
                         modifier = Modifier.size(48.dp)
@@ -158,6 +170,17 @@ fun TranslationScreen(
                         Icon(
                             painterResource(id = if (isListening) R.drawable.ic_pause else R.drawable.ic_mic),
                             contentDescription = if (isListening) "Pause" else "Mic",
+                            tint = Color.White
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { cameraLauncher.launch(null) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = "Capture Image",
                             tint = Color.White
                         )
                     }
@@ -171,46 +194,75 @@ fun TranslationScreen(
                         modifier = Modifier.size(48.dp)
                     ) {
                         Image(
-                            painterResource(id = R.drawable.volume), // Replace with your speaker icon resource.
+                            painterResource(id = R.drawable.volume),
                             contentDescription = "Speak Translation",
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(20.dp)) // Space before translate button
 
+                // Translate button at the bottom
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
                         onClick = {
-                            val targetLanguage = "hi" // Example target language.
-                            viewModel.translate(textToTranslate, targetLanguage)
+                            viewModel.translate(textToTranslate, "hi") // Pass the Hindi language code
                         },
-                        modifier = Modifier.width(150.dp),
-                        contentPadding = PaddingValues(vertical = 12.dp),
+                        modifier = Modifier
+                            .width(150.dp)
+                            .padding(top = 20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF69D269))
                     ) {
                         Text(
                             text = "Translate",
                             fontSize = 18.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
+
                 }
             }
         }
     }
 }
 
+fun extractTextFromImage(bitmap: Bitmap, viewModel: TranslationViewModel) {
+    val image = InputImage.fromBitmap(bitmap, 0)
+    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-@Preview(showBackground = true)
+    recognizer.process(image)
+        .addOnSuccessListener { visionText ->
+            viewModel.updateRecognizedText(visionText.text)
+        }
+        .addOnFailureListener { e ->
+            Log.e("Text Recognition", "Error recognizing text: ", e)
+        }
+}
+
 @Composable
-fun TranslationScreenPreview() {
-    TranslatorTheme {
-        TranslationScreen()
+fun CheckCameraPermission(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    var hasPermission by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            hasPermission = granted
+        }
+    )
+
+    LaunchedEffect(key1 = true) {
+        permissionLauncher.launch(android.Manifest.permission.CAMERA)
+    }
+
+    if (hasPermission) {
+        content()
+    } else {
+        Text("Requesting Camera Permission...")
     }
 }
